@@ -200,7 +200,7 @@ class _HomePageState extends State<Home> {
                     SizedBox(
                       height: 100,
                       child: ListView.separated(
-                        padding: EdgeInsets.only(left: 20),
+                        padding: EdgeInsets.only(left: 15),
                         itemCount: negara.length, 
                         scrollDirection: Axis.horizontal,
                         separatorBuilder: (_, __) => const SizedBox(width: 20),
