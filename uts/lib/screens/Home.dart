@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:uts/data/api.dart';
 import 'package:uts/data/survey_item.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 
 class Home extends StatefulWidget {
@@ -10,6 +11,7 @@ class Home extends StatefulWidget {
   @override
   State<Home> createState() => _HomePageState();
 }
+
 
 class _HomePageState extends State<Home> {
   final Api api = Api();
@@ -69,6 +71,15 @@ class _HomePageState extends State<Home> {
       });
     });
   }
+
+  List<String> bendera = [
+    'assets/Flag_of_Indonesia.svg',  
+    'assets/Flag_of_Sudan.svg',  
+    'assets/Flag_of_France.svg', 
+    'assets/Flag_of_Mexico.svg', 
+    'assets/Flag of South Africa.svg', 
+    'assets/Flag_of_Yemen.svg',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -189,32 +200,37 @@ class _HomePageState extends State<Home> {
                     SizedBox(
                       height: 100,
                       child: ListView.separated(
-                        itemCount: negara.length,
+                        itemCount: negara.length, 
                         scrollDirection: Axis.horizontal,
-                        separatorBuilder: (_, __) => const SizedBox(width: 12),
-                        itemBuilder: (_, i) => Column(
-                          children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurRadius: 16,
-                                    spreadRadius: -5,
-                                    color: Colors.black.withOpacity(0.15),
-                                  ),
-                                ],
+                        separatorBuilder: (_, __) => const SizedBox(width: 20),
+                        itemBuilder: (_, i) {
+                          return Column(
+                            children: [
+                              Container(
+                                width: 33,
+                                height: 33,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.rectangle,
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      blurRadius: 16,
+                                      spreadRadius: -5,
+                                      color: Colors.black.withOpacity(0.15),
+                                    ),
+                                  ],
+                                ),
+                                child: SvgPicture.asset(
+                                  bendera.toList()[i], 
+                                  width: 28, 
+                                  height: 28, 
+                                ),
                               ),
-                              child: Padding(
+                              Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Center(
                                   child: Text(
-                                    negara.values
-                                        .toList()[i]
-                                        .toStringAsFixed(0),
+                                    negara.values.toList()[i].toStringAsFixed(0),
                                     style: const TextStyle(
                                       color: Colors.black,
                                       fontSize: 20,
@@ -223,16 +239,20 @@ class _HomePageState extends State<Home> {
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              negara.keys.toList()[i],
-                              style: const TextStyle(
-                                fontSize: 12,
+                              const SizedBox(height: 6),
+                              Row(
+                                children: <Widget>[
+                                  Text(
+                                    negara.keys.toList()[i],
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 24),
