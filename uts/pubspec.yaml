@@ -33,6 +33,7 @@ dependencies:
   fl_chart: ^0.64.0
   dio: ^5.3.3
   flutter_svg: ^0.22.0 
+  csv: ^5.1.1
 
 
   # The following adds the Cupertino Icons font to your application.

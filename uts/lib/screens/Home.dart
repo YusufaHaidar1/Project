@@ -292,7 +292,19 @@ class _HomePageState extends State<Home> {
                         child: const Text("Detail"),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 15),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            "/tambah"
+                          );
+                        },
+                        child: const Text("Tambah"),
+                      ),
+                    ),
                   ],
                 ),
               ),
