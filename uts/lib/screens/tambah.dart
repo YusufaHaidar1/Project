@@ -1,248 +1,247 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:csv/csv.dart';
-import 'package:uts/data/api.dart';
+import 'package:uts/data/by_gender.dart';
+import 'package:uts/data/by_nationality.dart';
+import 'package:uts/service/server.dart';
 
+class AddDataDialog extends StatefulWidget {
+  final List listFactor;
+  final List<ByGender> listGender;
+  final List<ByNationality> listNationality;
 
-class Tambah extends StatefulWidget {
-  const Tambah({super.key});
+  const AddDataDialog(
+      {Key? key,
+      required this.listFactor,
+      required this.listGender,
+      required this.listNationality})
+      : super(key: key);
 
   @override
-  FormTambah createState() => FormTambah();
+  State<AddDataDialog> createState() => _AddDataDialogState();
 }
 
-class SurveyItem {
-  String genre;
-  String report;
-  int age;
-  double gpa;
-  int year;
-  int count;
-  String gender;
-  String nationality;
+class _AddDataDialogState extends State<AddDataDialog> {
+  ServerService? service;
+  // final TextEditingController _genreController = TextEditingController();
+  TextEditingController _reportsController = TextEditingController();
+  TextEditingController _ageController = TextEditingController();
+  TextEditingController _gpaController = TextEditingController();
+  TextEditingController _yearController = TextEditingController();
+  // final TextEditingController _genderController = TextEditingController();
+  // final TextEditingController _nationalityController = TextEditingController();
 
-  SurveyItem(this.genre, this.report, this.age, this.gpa, this.year, this.count, this.gender, this.nationality);
-}
+  List genres = [];
+  // final List<String> genres = ['Academic Support and Resources', 'Athletics and sports', 'Career opportunities', 'Financial Support', 'Health and Well-being Support', 'Online learning', 'Student Affairs', 'Food and Cantines', 'International student experiences', 'Housing and Transportation', 'Activities and Travelling'];
+  String selectedGenre = 'Academic Support and Resources';
 
-class FormTambah extends State<Tambah> {
-  final Api api = Api();
-  List<SurveyItem> DataOld = [];
+  List<ByGender> genders = [];
+  // final List<String> genders = ['M', 'F'];
+  String selectedGender = 'M';
 
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController genreController = TextEditingController();
-  final TextEditingController reportController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
-  final TextEditingController gpaController = TextEditingController();
-  final TextEditingController yearController = TextEditingController();
-  final TextEditingController countController = TextEditingController();
-  final TextEditingController genderController = TextEditingController();
-  final TextEditingController nationalityController = TextEditingController();
+  List<ByNationality> nationalities = [];
+  // final List<String> nationalities = ['Indonesia', 'Soudan', 'France', 'Mexico', 'South Africa', 'Yemen'];
+  String selectedNationality = 'Indonesia';
 
   @override
   void initState() {
-    super.initState();
-    // Read existing data when the app starts
-    readCSVFile('D:\\POLINEMA\\surveyx-server\\data_cleaned.csv').then((data) {
-      if (data != null) {
-        setState(() {
-          DataOld = data.map((dynamicItem) => SurveyItem(
-            dynamicItem[0], // Assuming the order in the list matches the order in SurveyItem constructor
-            dynamicItem[1],
-            dynamicItem[2],
-            dynamicItem[3],
-            dynamicItem[4],
-            dynamicItem[5],
-            dynamicItem[6],
-            dynamicItem[7],
-          )).toList();
-        });
-      }
-    });
-  }
-
-  Future<List<List<dynamic>>?> readCSVFile(String csvFilePath) async {
-  try {
-    final File file = File(csvFilePath);
-    final String csvData = await file.readAsString();
-    final CsvToListConverter converter = CsvToListConverter(eol: '\n');
-    return converter.convert(csvData);
-  } catch (e) {
-    print('Error reading CSV file: $e');
-    return null;
-  }
-}
-
-  
-  void appendDataToList(
-    String genre,
-    String report,
-    int age,
-    double gpa,
-    int year,
-    int count,
-    String gender,
-    String nationality,
-  ) {
-    SurveyItem newData = SurveyItem(
-      genre,
-      report,
-      age,
-      gpa,
-      year,
-      count,
-      gender,
-      nationality,
-    );
-
+    service = ServerService();
     setState(() {
-      DataOld.add(newData); // No need for wrapping in a list
+      genres = widget.listFactor;
+      selectedGenre = genres[0]['genre'];
+      genders = widget.listGender;
+      selectedGender = genders[0].gender;
+      nationalities = widget.listNationality;
+      selectedNationality = nationalities[0].nationality;
     });
+    super.initState();
   }
-
-  void saveDataToCSV() async {
-  final String filePath = 'D:\\POLINEMA\\surveyx-server\\data_cleaned.csv';
-
-  final ListToCsvConverter converter = ListToCsvConverter(eol: '\n');
-  final List<List<dynamic>> dataAsListOfLists = DataOld.map((item) => [
-    item.genre,
-    item.report,
-    item.age,
-    item.gpa,
-    item.year,
-    item.count,
-    item.gender,
-    item.nationality
-  ]).toList();
-
-  final String newCsvData = converter.convert(dataAsListOfLists);
-
-  final File file = File(filePath);
-
-  // Write CSV data to the file
-  await file.writeAsString(newCsvData);
-
-  print('Data berhasil ditambah');
-}
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Tambah Laporan'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: <Widget>[
-              TextFormField(
-                controller: genreController,
-                decoration: InputDecoration(labelText: 'Genre'),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a value';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: reportController,
-                decoration: InputDecoration(labelText: 'Report'),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a value';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: ageController,
-                decoration: InputDecoration(labelText: 'Age'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a value';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: gpaController,
-                decoration: InputDecoration(labelText: 'GPA'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a value';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: yearController,
-                decoration: InputDecoration(labelText: 'Year'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a value';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: countController,
-                decoration: InputDecoration(labelText: 'Count'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a value';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: genderController,
-                decoration: InputDecoration(labelText: 'Gender (Dalam format F/M)'),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a value';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: nationalityController,
-                decoration: InputDecoration(labelText: 'Nationality'),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a value';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  appendDataToList(
-                    genreController.text,
-                    reportController.text,
-                    int.parse(ageController.text),
-                    double.parse(gpaController.text),
-                    int.parse(yearController.text),
-                    int.parse(countController.text),
-                    genderController.text,
-                    nationalityController.text,
-                  );
-                  saveDataToCSV(); // Call saveDataToCSV here
-                }
-              },
-              child: Text('Tambah dan Simpan Data dalam CSV'), // Updated button text
+    return AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.insert_comment, color: Colors.black),
+            SizedBox(
+              width: 5.0,
             ),
-            ],
-          ),
+            Text('Insert Complain'),
+          ],
         ),
-      ),
-    );
+        content: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Genre',
+                  ),
+                  child: Flexible(
+                    child: DropdownButton<String>(
+                      value: selectedGenre,
+                      onChanged: (newValue) {
+                        setState(() {
+                          selectedGenre = newValue!;
+                        });
+                      },
+                      items: genres.map((genre) {
+                        return DropdownMenuItem<String>(
+                          value: genre['genre'],
+                          child: Text(genre['genre'],
+                              style: TextStyle(fontSize: 12.0)),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 120,
+                  child: TextFormField(
+                    maxLines: null,
+                    expands: true,
+                    controller: _reportsController,
+                    decoration: InputDecoration(
+                        filled: true,
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                        labelText: 'Report',
+                        hintText: 'Masukkan pesan anda!'),
+                  ),
+                ),
+                TextFormField(
+                  controller: _ageController,
+                  decoration: InputDecoration(
+                    labelText: 'Age',
+                  ),
+                ),
+                TextFormField(
+                  controller: _gpaController,
+                  decoration: InputDecoration(
+                    labelText: 'GPA',
+                  ),
+                ),
+                TextFormField(
+                  controller: _yearController,
+                  decoration: InputDecoration(
+                    labelText: 'Year',
+                  ),
+                ),
+                InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Gender',
+                  ),
+                  child: DropdownButton<String>(
+                    value: selectedGender,
+                    onChanged: (newValue) {
+                      setState(
+                        () {
+                          selectedGender = newValue!;
+                        },
+                      );
+                    },
+                    items: genders.map((gender) {
+                      return DropdownMenuItem<String>(
+                        value: gender.gender,
+                        child: Text(
+                            gender.gender == "M" ? "Laki-laki" : "Perempuan",
+                            style: TextStyle(fontSize: 12.0)),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Nationality',
+                  ),
+                  child: DropdownButton<String>(
+                    value: selectedNationality,
+                    onChanged: (newValue) {
+                      setState(() {
+                        selectedNationality = newValue!;
+                      });
+                    },
+                    items: nationalities.map((nationality) {
+                      return DropdownMenuItem<String>(
+                        value: nationality.nationality,
+                        child: Text(nationality.nationality,
+                            style: TextStyle(fontSize: 12.0)),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                SizedBox(height: 2.0,),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            service!.postNewData(
+                              selectedGenre, 
+                              _reportsController.text, 
+                              int.parse(_ageController.text), 
+                              double.parse(_gpaController.text), 
+                              int.parse(_yearController.text), 
+                              1, //count🗿
+                              selectedGender, 
+                              selectedNationality
+                            );
+                            Navigator.pop(context,1);
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(2.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text("Tambah", style: TextStyle(color: Colors.white),),
+                              ],
+                            ),
+                          )
+                        ),
+                      ),
+                    // SizedBox(width: 2.0,),
+                    Expanded(
+                      flex: 1,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade900,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context,0);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Batal',style: TextStyle(color: Colors.white),),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // actions: [
+          //   ElevatedButton(
+          //     onPressed: () {
+          //       // Simpan data
+          //     },
+          //     child: Text('Simpan'),
+          //   ),
+          //   TextButton(
+          //     onPressed: () {
+          //       // Batalkan
+          //     },
+          //     child: Text('Batal'),
+          //   ),
+          // ],
+        ));
   }
 }

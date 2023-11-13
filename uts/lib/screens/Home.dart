@@ -1,7 +1,13 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:country_flags/country_flags.dart';
+
+import 'package:uts/screens/detail_complain.dart';
+import 'package:uts/service/server.dart';
+import 'package:uts/data/by_gender.dart';
+import 'package:uts/data/by_nationality.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:uts/data/api.dart';
-import 'package:uts/data/survey_item.dart';
+import 'package:uts/screens/tambah.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 
@@ -14,63 +20,115 @@ class Home extends StatefulWidget {
 
 
 class _HomePageState extends State<Home> {
-  final Api api = Api();
-  bool isLoading = true;
-  List<SurveyItem> data = [];
-  double totalResponden = 0;
-  double jumlahKategori = 0;
-  double gpa = 0;
-  double age = 0;
+  ServerService? service;
+  List<ByGender> byGender = [];
+  List<ByNationality> byNationality = [];
+  double avgAge = 0;
+  double avgGPA = 0;
+  List surveysByFactor = [];
+  int surveysCount = 0;
+  int problemCount = 0;
+  int totalByGender = 0;
+  int totalByNationality = 0;
+  String selectedProblemFactor = 'Academic Support and Resources'; // Nilai awal dropdown
+  String selectedGender = 'M'; // Nilai awal dropdown gender
+  String selectedCountry = 'Indonesia'; // Nilai awal dropdown country
 
-  double persenPerempuan = 0;
-  double persenLaki = 0;
+  List<Color> natChartColors = [];
+  List<double> natChartOpacities = [];
+  List<Color> jkChartColors = [];
+  List<double> jkChartOpacities = [];
 
-  Map<String, double> negara = {};
+  late Future myInit;
 
-  @override
+  Color getRandomColor() {
+  // return Colors.primaries[Random().nextInt(Colors.primaries.length)];
+  return Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
+  }
+
+  Future initialize() async {
+    // surveys = [];
+    // surveys = (await service!.getAllData());
+    surveysCount = (await service!.getAllDataCount());
+    byGender = (await service!.getShowDataByGender());
+    byNationality = (await service!.getShowDataByNationality());
+    surveysByFactor = await service!.getShowDataByFactor();
+    avgAge = (await service!.getAvgAge());
+    avgGPA = (await service!.getAvgGPA());
+    setState(() {
+      selectedProblemFactor = surveysByFactor[0]["genre"];
+      problemCount = surveysByFactor[0]["total"];
+      surveysCount = surveysCount;
+      // surveys = surveys;
+      surveysByFactor = surveysByFactor;
+      byGender = byGender;
+      totalByGender =
+          byGender.firstWhere((item) => item.gender == selectedGender).total;
+      byNationality = byNationality;
+      totalByNationality = byNationality
+          .firstWhere((item) => item.nationality == selectedCountry)
+          .total;
+      natChartColors =
+          List.generate(byNationality.length, (index) => getRandomColor());
+      natChartOpacities = List.generate(byNationality.length, (index) => 1.0);
+      jkChartColors =
+          List.generate(byGender.length, (index) => getRandomColor());
+      jkChartOpacities = List.generate(byGender.length, (index) => 1.0);
+    });
+  }
+
+  Future refresh() async {
+    surveysCount = (await service!.getAllDataCount());
+    byGender = (await service!.getShowDataByGender());
+    byNationality = (await service!.getShowDataByNationality());
+    surveysByFactor = await service!.getShowDataByFactor();
+    avgAge = (await service!.getAvgAge());
+    avgGPA = (await service!.getAvgGPA());
+    setState(() {
+      surveysCount = surveysCount;
+      surveysByFactor = surveysByFactor;
+      problemCount = surveysByFactor.firstWhere((item) => item['genre'] == selectedProblemFactor)["total"];
+      byGender = byGender;
+      totalByGender =
+          byGender.firstWhere((item) => item.gender == selectedGender).total;
+      byNationality = byNationality;
+      totalByNationality = byNationality
+          .firstWhere((item) => item.nationality == selectedCountry)
+          .total;
+    });
+  }
+
   void initState() {
+    service = ServerService();
+    // initialize();
+    myInit = initialize();
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      getData();
-    });
   }
 
-  void getData() {
-    api.getData().then((value) {
-      setState(() {
-        data = value;
-        totalResponden = data.length.toDouble();
-        jumlahKategori = data.map((e) => e.genre).toSet().length.toDouble();
-        gpa = data
-                .map((e) => e.gpa)
-                .reduce((value, element) => value! + element!)! /
-            totalResponden;
-        age = data
-                .map((e) => e.age)
-                .reduce((value, element) => value! + element!)! /
-            totalResponden;
-
-        int jumlahPerempuan = data.where((e) => e.gender == "F").length;
-        int jumlahLaki = totalResponden.toInt() - jumlahPerempuan;
-
-        persenPerempuan = jumlahPerempuan / totalResponden * 100;
-        persenLaki = jumlahLaki / totalResponden * 100;
-
-        negara = {};
-
-        for (var element in data) {
-          if (negara.containsKey(element.nationality)) {
-            negara[element.nationality!] = negara[element.nationality]! + 1;
-          } else {
-            negara[element.nationality!] = 1;
-          }
-        }
-
-        isLoading = false;
-      });
-    });
+  Future _sumByCategory() async {
+    var item = surveysByFactor
+        .firstWhere((element) => element["genre"] == selectedProblemFactor);
+    // Mengambil nilai total dari objek tersebut
+    problemCount = item["total"];
   }
+
+  Future<List<ByGender>> getDataByGender() async {
+    byGender = (await service!.getShowDataByGender());
+    return byGender;
+  }
+
+  Future<List<ByNationality>> getDataByNationality() async {
+    byNationality = (await service!.getShowDataByNationality());
+    return byNationality;
+  }
+
+  void _viewDetailPressed(BuildContext context) {
+    // Fungsi ini akan dipanggil ketika "View Detail" ditekan
+    MaterialPageRoute route =
+        MaterialPageRoute(builder: (_) => DetailComplain(surveysCount));
+    Navigator.push(context, route);
+  }
+
 
   List<String> bendera = [
     'assets/Flag_of_Indonesia.svg',  
@@ -83,383 +141,524 @@ class _HomePageState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+      home: Scaffold(
       appBar: AppBar(
         title: const Text('Survey X'),
         backgroundColor: const Color.fromARGB(255, 104, 2, 238),
+        actions: [
+            TextButton(
+                onPressed: () async {
+                  int? res = await showDialog(
+                    context: context,
+                    builder: (context) => AddDataDialog(listFactor: surveysByFactor,listGender: byGender,listNationality: byNationality)
+                  );
+                  if(res != null && res == 1){
+                    setState(() {
+                      myInit = refresh();
+                      print('Refresh Data');
+                    });
+                  }
+                  
+                },
+              child: Ink(
+                padding: EdgeInsets.all(2.0),
+                child: Row(
+                  children: [
+                    Text("Tambah Data", style: TextStyle(color: Colors.black),),
+                    Icon(Icons.add, color: Colors.black,)
+                  ],
+                ),
+                color: Colors.purpleAccent,
+              )
+            )
+        ],
         centerTitle: true,
         titleTextStyle: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : RefreshIndicator(
-              onRefresh: () async {
-                setState(() {
-                  isLoading = true;
-                });
-                getData();
-              },
-              child: SingleChildScrollView(
+      
+      body: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
                   vertical: 8,
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(
-                      height: 120,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                              child: AverageItem(
-                            title: "Total Responden",
-                            value: totalResponden,
-                          )),
-                          Expanded(
-                              child: AverageItem(
-                            title: "Jumlah Kategori",
-                            value: jumlahKategori,
-                          )),
-                          Expanded(
-                              child: AverageItem(
-                            title: "GPA",
-                            value: gpa,
-                          )),
-                          Expanded(
-                              child: AverageItem(
-                            title: "Age",
-                            value: age,
-                          )),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const SizedBox(
-                      height: 20,
-                      child: Text(
-                        'Responden Berdasarkan Gender',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 200,
-                      child: Stack(
-                        children: [
-                          PieChart(
-                            PieChartData(
-                              sectionsSpace: 0,
-                              centerSpaceRadius: 40,
-                              sections: showingSections(),
+                  //Bagian Total Responden
+                  Card(
+                  color: Colors.white,
+                  elevation: 4.0,
+                  child: Container(
+                    width: 150.0,
+                    height: 130.0,
+                    margin: EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Total Responden',
+                            style: TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Positioned(
-                            right: 10,
-                            top: 10,
-                            child: Column(
-                              children: [
-                                _buildLegendItem(
-                                  const Color.fromARGB(255, 104, 2, 238),
-                                  'Perempuan',
-                                ),
-                                _buildLegendItem(
-                                  const Color.fromARGB(255, 171, 131, 226),
-                                  'Laki-Laki',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const SizedBox(
-                      height: 20,
-                      child: Center(
-                        child: Text(
-                          'Responden Berdasarkan Negara',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 100,
-                      child: ListView.separated(
-                        padding: EdgeInsets.only(left: 15),
-                        itemCount: negara.length, 
-                        scrollDirection: Axis.horizontal,
-                        separatorBuilder: (_, __) => const SizedBox(width: 20),
-                        itemBuilder: (_, i) {
-                          return Column(
-                            children: [
-                              Container(
-                                width: 33,
-                                height: 33,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.rectangle,
-                                  color: Colors.white,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 16,
-                                      spreadRadius: -5,
-                                      color: Colors.black.withOpacity(0.15),
-                                    ),
-                                  ],
-                                ),
-                                child: SvgPicture.asset(
-                                  bendera.toList()[i], 
-                                  width: 28, 
-                                  height: 28, 
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Center(
-                                  child: Text(
-                                    negara.values.toList()[i].toStringAsFixed(0),
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
+                        SizedBox(
+                          height: 10.0,
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            FutureBuilder(
+                              future: myInit,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.done) {
+                                  return Text(
+                                    surveysCount.toString() + ' ',
+                                    style: TextStyle(
+                                      fontSize: 38.0,
+                                      color: const Color(0xFF000000),
                                       fontWeight: FontWeight.bold,
                                     ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: <Widget>[
+                                  );
+                                }else{
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                }
+                              }
+                            ),
+                          ],
+                        ),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.bottomRight,
+                            child: InkWell(
+                              onTap: () => _viewDetailPressed(context),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
                                   Text(
-                                    negara.keys.toList()[i],
-                                    style: const TextStyle(
-                                      fontSize: 12,
+                                    'View Detail',
+                                    style: TextStyle(
+                                      fontSize: 14.0,
+                                      color: Colors.blue,
                                     ),
+                                  ),
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    color: Colors.blue,
                                   ),
                                 ],
                               ),
-                            ],
-                          );
-                        },
-                      ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                    ListView.separated(
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: data.length > 5 ? 5 : data.length,
-                      itemBuilder: (_, i) => InkWell(
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            "/detail-complain",
-                            arguments: data[i],
-                          );
-                        },
-                        child: ListItem(
-                          title: data[i].genre ?? "",
-                          description: data[i].reports ?? "",
+                  ),
+                ),
+                SizedBox(height: 15),
+                //Bagian Genre
+                Card(
+                  elevation: 4.0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Jumlah Responden tiap Genre',
+                          style: TextStyle(
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 2.0,
+                        ),
+                        DropdownButton<String>(
+                          value: selectedProblemFactor,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedProblemFactor = newValue!;
+                            });
+                            _sumByCategory();
+                          },
+                          items: surveysByFactor.map((item) {
+                            return DropdownMenuItem<String>(
+                              value: item["genre"],
+                              child: Text(
+                                item["genre"],
+                                style: TextStyle(fontSize: 15),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        Column(
+                          children: [
+                            Card(
+                              color: Colors.white,
+                              elevation: 4.0,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  // crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        FutureBuilder(
+                                          future: myInit,
+                                          builder: (context,snapshot) {
+                                            if (snapshot.connectionState ==ConnectionState.done) {
+                                              return Text(
+                                                problemCount.toString() + ' ',
+                                                style: TextStyle(
+                                                  fontSize: 35.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }else{
+                                              return Center(
+                                                child: CircularProgressIndicator());
+                                            }
+                                          }
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 15),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: Card(
+                        color: Color.fromARGB(255, 255, 255, 255), // Warna latar belakang
+                        elevation: 4.0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              10.0), // Membuat sudut kartu melengkung
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Center(
+                                child: Text(
+                                  'Rata-rata Umur',
+                                  style: TextStyle(
+                                    fontSize:
+                                        18.0, // Ukuran teks yang lebih besar
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Center(
+                                child: Text(
+                                  avgAge.round().toString(),
+                                  style: TextStyle(
+                                    fontSize:
+                                        36.0, // Ukuran teks yang lebih besar
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
                         ),
                       ),
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 12),
                     ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            "/detail",
-                            arguments: data,
-                          );
-                        },
-                        child: const Text("Detail"),
+                    Expanded(
+                      child: Card(
+                        color: const Color.fromARGB(255, 255, 255, 255), // Warna latar belakang
+                        elevation: 4.0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              10.0), // Membuat sudut kartu melengkung
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Center(
+                                child: Text(
+                                  'Rata-rata IPK',
+                                  style: TextStyle(
+                                    fontSize:
+                                        18.0, // Ukuran teks yang lebih besar
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Center(
+                                child: Text(
+                                  avgGPA.toStringAsFixed(2),
+                                  style: TextStyle(
+                                    fontSize:
+                                        36.0, // Ukuran teks yang lebih besar
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    )],
+                ),
+                SizedBox(height: 15),
+                Column(
+                  children: [
+                    // Chart JK
+                    Card(
+                      elevation: 4.0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Jumlah berdasarkan jenis kelamin',
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 2.0,
+                            ),
+                            FutureBuilder(
+                              future: myInit,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  return Column(
+                                    children: [
+                                      SizedBox(
+                                        height: 200,
+                                        child: PieChart(
+                                          PieChartData(
+                                            sections: List.generate(
+                                              byGender.length,
+                                              (index) => PieChartSectionData(
+                                                color: jkChartColors[index],
+                                                    // .withOpacity(
+                                                    //     jkChartOpacities[
+                                                    //         index]),
+                                                value: byGender[index].total /
+                                                    (byGender.fold(
+                                                        0,
+                                                        (sum, item) =>
+                                                            sum + item.total)) *
+                                                    100,
+                                                title: selectedGender == byGender[index].gender
+                                                  ? ((byGender[index].total / (byGender.fold(0,(sum, item) => sum + item.total)) * 100).round().toString()+"%")
+                                                  : '',
+                                                radius: selectedGender ==
+                                                        byGender[index].gender
+                                                    ? 86
+                                                    : 78,
+                                                titleStyle: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                                titlePositionPercentageOffset: 0.3
+                                              ),
+                                            ),
+                                            sectionsSpace: 4,
+                                            centerSpaceRadius: 5,
+                                          ),
+                                        ),
+                                      ),
+                                      // Legend for JK Chart
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: byGender.map((item) {
+                                          return Row(
+                                            children: [
+                                              Container(
+                                                width: 10,
+                                                height: 10,
+                                                color: jkChartColors[byGender.indexOf(item)],
+                                                  // .withOpacity(jkChartOpacities[byGender.indexOf(item)]),
+                                              ),
+                                              SizedBox(width: 5),
+                                              Text(
+                                                item.gender == "M"
+                                                    ? "Laki-laki"
+                                                    : "Perempuan",
+                                              ),
+                                              SizedBox(width: 5),
+                                            ],
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 15),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            "/tambah"
-                          );
-                        },
-                        child: const Text("Tambah"),
+                    Card(
+                      elevation: 4.0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Jumlah berdasarkan negara asal',
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 2.0,
+                            ),
+                            FutureBuilder(
+                              future: myInit,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  return Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 2,
+                                            child: SizedBox(
+                                              height: 200,
+                                              width: 300,
+                                              child: PieChart(
+                                                PieChartData(
+                                                  sections: List.generate(
+                                                    byNationality.length,
+                                                    (index) =>
+                                                        PieChartSectionData(
+                                                      color: natChartColors[
+                                                              index],
+                                                          // .withOpacity(
+                                                          //     natChartOpacities[
+                                                          //         index]),
+                                                      value: byNationality[
+                                                                  index]
+                                                              .total /
+                                                          (byNationality.fold(
+                                                              0,
+                                                              (sum, item) =>
+                                                                  sum +
+                                                                  item.total)) *
+                                                          100,
+                                                      title: selectedCountry ==
+                                                              byNationality[
+                                                                      index]
+                                                                  .nationality
+                                                          ? ((byNationality[index]
+                                                                          .total /
+                                                                      (byNationality.fold(
+                                                                          0,
+                                                                          (sum, item) =>
+                                                                              sum +
+                                                                              item.total)) *
+                                                                      100)
+                                                                  .round()
+                                                                  .toString() +
+                                                              "%")
+                                                          : '',
+                                                      radius: selectedCountry ==
+                                                              byNationality[
+                                                                      index]
+                                                                  .nationality
+                                                          ? 86
+                                                          : 78,
+                                                      titleStyle: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                                      titlePositionPercentageOffset: (byNationality[index].total/(byNationality.fold(0,(sum,item)=>sum+item.total))*100) >= 7
+                                                      ?0.5:1.2,
+                                                    ),
+                                                  ),
+                                                  sectionsSpace: 4,
+                                                  centerSpaceRadius: 5,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: 25.0,
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Column(
+                                              children:
+                                                  byNationality.map((item) {
+                                                return Row(
+                                                  children: [
+                                                    Container(
+                                                      width: 10,
+                                                      height: 10,
+                                                      color: natChartColors[byNationality.indexOf(item)],
+                                                        // .withOpacity(natChartOpacities[byNationality.indexOf(item)]),
+                                                    ),
+                                                    SizedBox(width: 5),
+                                                    Text(item.nationality),
+                                                  ],
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
+                  ]
+                )
               ),
-            ),
-    );
-  }
-
-  List<PieChartSectionData> showingSections() {
-    return [
-      PieChartSectionData(
-        color: const Color.fromARGB(255, 104, 2, 238),
-        value: persenPerempuan,
-        title: '${persenPerempuan.toStringAsFixed(0)}%',
-        radius: 60,
-        titleStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Color(0xffffffff)),
-      ),
-      PieChartSectionData(
-        color: const Color.fromARGB(255, 171, 131, 226),
-        value: persenLaki,
-        title: '${persenLaki.toStringAsFixed(0)}%',
-        radius: 50,
-        titleStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Color(0xffffffff)),
-      ),
-    ];
-  }
-
-  Widget _buildLegendItem(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(label),
-      ],
-    );
-  }
-}
-
-class AverageItem extends StatelessWidget {
-  const AverageItem({
-    super.key,
-    required this.title,
-    required this.value,
-  });
-
-  final String title;
-  final double value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 16,
-              spreadRadius: -5,
-              color: Colors.black.withOpacity(0.15),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                value % 1 == 0
-                    ? value.toStringAsFixed(0)
-                    : value.toStringAsFixed(2),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class ListItem extends StatelessWidget {
-  const ListItem({
-    super.key,
-    required this.title,
-    required this.description,
-  });
-
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 16,
-              spreadRadius: -5,
-              color: Colors.black.withOpacity(0.15),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+      )
+      )
+    ;
   }
 }

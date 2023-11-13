@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:uts/screens/Home.dart';
-import 'package:uts/screens/Detail.dart';
-import 'package:uts/screens/detail_complain.dart';
-import 'package:uts/screens/tambah.dart';
 
 void main() {
-  runApp(MaterialApp(
-    initialRoute: '/',
-    routes: {
-      '/' : (_) => const Home(),
-      "/detail": (_) => Detail(),
-      "/detail-complain": (_) => const DetailComplain(),
-      "/tambah": (_) => Tambah(),
-    },
-  ));
+  runApp(const MainApp());
+}
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+
+      ),
+      home: Home(),
+    );
+  }
 }
 
