@@ -59,7 +59,7 @@ class _DetailComplain extends State<DetailComplain> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text('Detail Page'),
-        backgroundColor: Colors.purple,
+        backgroundColor: Color.fromARGB(255, 104, 2, 238),
       ),
       body: Column(
         children: [   
@@ -102,11 +102,10 @@ class _DetailComplain extends State<DetailComplain> {
                         SurveyItem survey = surveys[(_currentPage - 1) * _rowsPerPage + index];
                         return ExpansionTile(
                           // expandedAlignment: Alignment.centerLeft,
-                          title: Text(survey.genre),
+                          title: Text(survey.genre, style: TextStyle(fontWeight: FontWeight.bold),),
                           subtitle: Text(survey.reports),
                           trailing: Text(survey.nationality),
                           children: [
-                            Divider(color: Colors.grey, height: 10, thickness: 2),
                             Container(
                               margin: EdgeInsets.all(8.0),
                               child: Align(

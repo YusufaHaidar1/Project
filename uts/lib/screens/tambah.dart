@@ -177,6 +177,9 @@ class _AddDataDialogState extends State<AddDataDialog> {
                       Expanded(
                         flex: 1,
                         child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 104, 2, 238),
+                        ),
                           onPressed: () {
                             service!.postNewData(
                               selectedGenre, 
@@ -201,12 +204,12 @@ class _AddDataDialogState extends State<AddDataDialog> {
                           )
                         ),
                       ),
-                    // SizedBox(width: 2.0,),
+                    SizedBox(width: 12.0,),
                     Expanded(
                       flex: 1,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade900,
+                          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                         ),
                         onPressed: () {
                           Navigator.pop(context,0);
@@ -216,7 +219,7 @@ class _AddDataDialogState extends State<AddDataDialog> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('Batal',style: TextStyle(color: Colors.white),),
+                              Text('Batal',style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),),
                             ],
                           ),
                         ),

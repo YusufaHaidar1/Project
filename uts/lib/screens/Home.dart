@@ -162,20 +162,23 @@ class _HomePageState extends State<Home> {
                   
                 },
               child: Ink(
-                padding: EdgeInsets.all(2.0),
+                padding: EdgeInsets.all(6.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Color.fromARGB(255, 255, 255, 255),
+                  ),
                 child: Row(
                   children: [
                     Text("Tambah Data", style: TextStyle(color: Colors.black),),
-                    Icon(Icons.add, color: Colors.black,)
+                    Icon(Icons.add, color: Colors.black,),
                   ],
                 ),
-                color: Colors.purpleAccent,
-              )
+              ),
             )
         ],
         centerTitle: true,
         titleTextStyle: const TextStyle(
-          fontSize: 20,
+          fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
       ),
