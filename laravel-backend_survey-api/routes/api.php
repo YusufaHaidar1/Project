@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\APIController;
+use App\Http\Controllers\StudentsAPIController;
+use App\Http\Controllers\ReportsAPIController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,3 +31,15 @@ Route::get("show_data/by_nationality",[APIController::class,"showByNationality"]
 Route::get("get_average_age",[APIController::class,"getAvgAge"]);
 Route::get("get_average_gpa",[APIController::class,"getAvgGPA"]);
 Route::post("insert_data",[APIController::class,"insertData"]);
+
+Route::get("students", [StudentsAPIController::class, "index"]);
+Route::get("students/{nim}", [StudentsAPIController::class, "show"]);
+Route::post("students/login", [StudentsAPIController::class, "login"]);
+Route::post("add_student", [StudentsAPIController::class, "store"]);
+Route::post("edit_student/{nim}", [StudentsAPIController::class, "update"]);
+
+Route::get("reports", [ReportsAPIController::class, "index"]);
+Route::get("reports/{id}", [ReportsAPIController::class, "show"]);
+Route::get("reports/{id}/image", [ReportsAPIController::class, "showimg"]);
+Route::post("add_report", [ReportsAPIController::class, "store"]);
+Route::post("edit_report/{id}", [ReportsAPIController::class, "update"]);

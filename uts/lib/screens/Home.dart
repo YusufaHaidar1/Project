@@ -181,6 +181,10 @@ class _HomePageState extends State<Home> {
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       
       body: SingleChildScrollView(

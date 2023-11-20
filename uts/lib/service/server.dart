@@ -91,7 +91,7 @@ class ServerService {
     await dotenv.load(fileName: ".env");
     final String? baseUrl = dotenv.env['SERVER_ADDRESS']! + 'show_data/by_factor';
     http.Response response = await http.get(Uri.parse(baseUrl!));
-    if (response.statusCode == HttpStatus.ok) {
+    if (response.statusCode == 200) {
       print('s');
       List data = jsonDecode(response.body);
       return data;

@@ -32,16 +32,43 @@ dependencies:
     sdk: flutter
   fl_chart: ^0.64.0
   dio: ^5.3.3
+  flutter_dotenv: ^5.1.0
   flutter_svg: ^2.0.9 
-  csv: ^5.1.1
   country_flags: ^2.1.1
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.5
+  google_fonts: ^6.1.0
+  image_picker: ^1.0.4
+  intl: ^0.18.1
 
+flutter_native_splash:
+  color: "#ffffff"
+  image: "assets/Icons/Designer.png"
+  android: true
+  ios : true
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/Icons/Designer.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/Icons/Designer.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "assets/Icons/Designer.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "assets/Icons/Designer.png"
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   http: ^1.1.0
-  path_provider: ^2.1.1
   flutter_dotenv: ^5.1.0
 
 dev_dependencies:
@@ -75,6 +102,7 @@ flutter:
     - assets/Flag of South Africa.svg
     - assets/Flag_of_Yemen.svg
     - .env
+    - assets/Icons/Designer.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
